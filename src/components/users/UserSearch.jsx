@@ -1,24 +1,31 @@
-import { useState, useContext } from "react";
-import GithubContext from "../../context/github/GithubContext";
+import { useState, useContext } from 'react';
+import AlertContext from '../../context/alert/AlertContext';
+import GithubContext from '../../context/github/GithubContext';
+import { searchUsers } from '../../context/github/GithubActions';
 
 export default function UserSearch() {
-    const [text, setText] = useState('')
-    
-    const {users} = useContext(GithubContext)
+  const [text, setText] = useState('');
 
-    const handleChange = (e) => {
-        setText(e.target.value)
-    }
-    const handleSubmit = (e)=> {
-        e.preventDefault()
+  const { users, dispatch } = useContext(GithubContext);
+  const { setAlert } = useContext(AlertContext);
 
-        if(text === '') {
-            alert('Please enter something')
-        }
-        else {
-            setText('')
-        }
+  const handleChange = (e) => {
+    setText(e.target.value);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (text === '') {
+      setAlert('Please enter something', 'error');
+    } else {
+      dispatch({ type: 'SET_LOADING' });
+      const users = await searchUsers(text);
+      dispatch({ type: 'GET_USERS', payload: users });
+      setText('');
     }
+  };
+
   return (
     <div className='grid grid-cols-1 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 mb-8 gap-8 '>
       <div>
@@ -31,15 +38,26 @@ export default function UserSearch() {
                 value={text}
                 onChange={handleChange}
               />
-              <button type="Submit" className="absolute top-0 right-0 rounded-l-none w-36 btn btn-lg">Go</button>
-        
+              <button
+                type='Submit'
+                className='absolute top-0 right-0 rounded-l-none w-36 btn btn-lg'
+              >
+                Go
+              </button>
             </div>
           </div>
         </form>
       </div>
-      {users.length > 0 && <div>
-        <button className='btn btn-ghost btn-lg'>Clear</button>
-      </div>} 
+      {users.length > 0 && (
+        <div>
+          <button
+            className='btn btn-ghost btn-lg'
+            onClick={() => dispatch({ type: 'CLEAR_USERS' })}
+          >
+            Clear
+          </button>
+        </div>
+      )}
     </div>
   );
 }
